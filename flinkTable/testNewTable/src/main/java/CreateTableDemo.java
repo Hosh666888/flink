@@ -1,40 +1,29 @@
-import org.apache.calcite.materialize.SqlStatisticProvider;
-import org.apache.calcite.plan.Context;
-import org.apache.calcite.plan.RelOptCostFactory;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.prepare.PlannerImpl;
-import org.apache.calcite.rel.type.RelDataTypeSystem;
-import org.apache.calcite.rex.RexExecutor;
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.sql.SqlOperatorTable;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql2rel.SqlRexConvertletTable;
-import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Program;
-import org.apache.flink.calcite.shaded.com.google.common.collect.ImmutableList;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.operators.MapOperator;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.runtime.execution.Environment;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.DataTypes;
+import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Table;
-import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.TableEnvironment;
+import org.apache.flink.table.api.internal.TableEnvironmentImpl;
+import org.apache.flink.table.api.internal.TableImpl;
+import org.apache.flink.table.api.java.BatchTableEnvironment;
 import org.apache.flink.table.api.java.StreamTableEnvironment;
 import org.apache.flink.table.api.java.internal.StreamTableEnvironmentImpl;
-import org.apache.flink.table.catalog.Catalog;
-import org.apache.flink.table.catalog.CatalogManager;
-import org.apache.flink.table.catalog.FunctionCatalog;
-import org.apache.flink.table.catalog.GenericInMemoryCatalog;
-import org.apache.flink.table.delegation.Executor;
-import org.apache.flink.table.delegation.Planner;
-import org.apache.flink.table.module.ModuleManager;
-import org.apache.flink.table.planner.delegation.BlinkPlannerFactory;
-import org.apache.flink.table.planner.delegation.PlannerBase;
-import org.apache.flink.table.planner.delegation.StreamExecutor;
+import org.apache.flink.table.descriptors.FileSystem;
+import org.apache.flink.table.descriptors.OldCsv;
+import org.apache.flink.table.descriptors.Schema;
+import org.apache.flink.table.runtime.operators.TableStreamOperator;
+import org.apache.flink.table.types.DataType;
+import scala.Tuple2;
 
-import java.util.HashMap;
 
 /**
  * @author: Double>J
@@ -44,35 +33,41 @@ import java.util.HashMap;
  **/
 public class CreateTableDemo {
 
+   static class Input{
+        public String name;
+        public long age;
 
-    public static void main(String[] args) {
+       public Input(String name, long age) {
+           this.name = name;
+           this.age = age;
+       }
+   }
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
+    public static void main(String[] args) throws Exception {
 
-        CatalogManager catalogManager = new CatalogManager("myCatalog", new GenericInMemoryCatalog("my", "myDatabase"));
-        ModuleManager moduleManager = new ModuleManager();
+        ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+        BatchTableEnvironment tableEnv = BatchTableEnvironment.create(env);
 
-        TableConfig tableConfig = new TableConfig();
-        FunctionCatalog functionCatalog = new FunctionCatalog(
-                tableConfig,catalogManager,moduleManager
-        );
+        // DataStream<Input> source = env.readTextFile("log.txt")
+        //         .map(line -> {
+        //             String[] split = line.split(",");
+        //             return new Input(split[0], Long.parseLong(split[1]));
+        //         });
 
-        StreamExecutor streamExecutor = new StreamExecutor(env);
+        MapOperator<String, Input> map = env.readTextFile("log.txt").map(line -> {
+            String[] split = line.split(",");
+            return new Input(split[0], Long.parseLong(split[1]));
+        });
 
 
-        Planner planner = new BlinkPlannerFactory().create(new HashMap<String, String>(), streamExecutor, tableConfig, functionCatalog, catalogManager);
-        StreamTableEnvironmentImpl tableEnv = new StreamTableEnvironmentImpl(
-                catalogManager,
-                moduleManager,
-                functionCatalog,
-                tableConfig,
-                env,
-                planner,
-                streamExecutor,
-                true
-        );
+        Table table = tableEnv.fromDataSet(map);
 
-        Table from = tableEnv.from("create table(name String,age BIGINT)");
+
+        DataSet<Input> inputDataSet = tableEnv.toDataSet(table, Input.class);
+
+        inputDataSet.print();
+
+
 
 
 
