@@ -16,6 +16,9 @@ public class AggDTO implements Serializable {
 
     public long orderCount;
 
+    public AggDTO() {
+    }
+
     public AggDTO(String timeGap, double amount, long orderCount) {
         this.timeGap = timeGap;
         this.amount = amount;

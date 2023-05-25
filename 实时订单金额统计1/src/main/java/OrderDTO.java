@@ -17,12 +17,29 @@ public class OrderDTO implements Serializable {
 
     public String key;
 
+    public OrderDTO() {
+    }
+
+    public OrderDTO(String orderNum, double amount, long createTime) {
+        this.orderNum = orderNum;
+        this.amount = amount;
+        this.createTime = createTime;
+    }
+
+    public OrderDTO(String orderNum, double amount, long createTime, String key) {
+        this.orderNum = orderNum;
+        this.amount = amount;
+        this.createTime = createTime;
+        this.key = key;
+    }
+
     @Override
     public String toString() {
         return "OrderDTO{" +
                 "orderNum='" + orderNum + '\'' +
                 ", amount=" + amount +
                 ", createTime=" + createTime +
+                ", key='" + key + '\'' +
                 '}';
     }
 }

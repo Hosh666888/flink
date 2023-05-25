@@ -1,7 +1,6 @@
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.scala.function.RichProcessAllWindowFunction;
 import org.apache.flink.util.Collector;
-import org.apache.logging.log4j.util.Strings;
 
 import java.io.File;
 import java.io.IOException;

@@ -21,8 +21,9 @@ import java.util.Properties;
  **/
 public class MyKafkaSource implements SourceFunction<OrderDTO> {
 
-    private final KafkaConsumer<String, OrderDTO> consumer;
-    private volatile boolean cancel;
+    private static final long serialVersionUID = -9171435840423368693L;
+    private final transient KafkaConsumer<String, OrderDTO> consumer;
+    private volatile transient boolean cancel;
 
     public MyKafkaSource(Collection<String> topics) throws IOException {
 
@@ -40,14 +41,13 @@ public class MyKafkaSource implements SourceFunction<OrderDTO> {
         if (props.isEmpty()) {
             throw new IllegalArgumentException("can not parse kafka config");
         }
-        consumer = new KafkaConsumer<String, OrderDTO>(props);
+        consumer = new KafkaConsumer<>(props);
         consumer.subscribe(topics);
     }
 
     public void run(SourceContext<OrderDTO> context) throws Exception {
 
         while (!cancel && consumer != null) {
-
             ConsumerRecords<String, OrderDTO> data = consumer.poll(100);
             for (ConsumerRecord<String, OrderDTO> item : data) {
                 OrderDTO value = item.value();
