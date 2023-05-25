@@ -13,8 +13,9 @@ import java.sql.Timestamp;
  * @author: Double>J
  * @email: zjj20001031@foxmail.com
  * @editTime: 5/24/2023 3:37 PM
- * @desc:
+ * @desc: 有问题 跑不起来
  **/
+@Deprecated
 public class MyProcessFunction extends ProcessFunction<OrderDTO, AggDTO> {
 
     //间隔分组

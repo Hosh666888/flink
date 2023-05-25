@@ -15,6 +15,8 @@ public class OrderDTO implements Serializable {
 
     public long createTime;
 
+    public String key;
+
     @Override
     public String toString() {
         return "OrderDTO{" +

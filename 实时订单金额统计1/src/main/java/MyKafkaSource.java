@@ -17,7 +17,7 @@ import java.util.Properties;
  * @author: Double>J
  * @email: zjj20001031@foxmail.com
  * @editTime: 5/24/2023 3:02 PM
- * @desc:
+ * @desc:   暂未测试
  **/
 public class MyKafkaSource implements SourceFunction<OrderDTO> {
 
