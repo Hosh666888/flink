@@ -1,3 +1,4 @@
+import com.esotericsoftware.minlog.Log;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -5,10 +6,14 @@ import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -17,13 +22,15 @@ import java.util.Properties;
  * @author: Double>J
  * @email: zjj20001031@foxmail.com
  * @editTime: 5/24/2023 3:02 PM
- * @desc:   暂未测试
+ * @desc: 暂未测试
  **/
 public class MyKafkaSource implements SourceFunction<OrderDTO> {
 
     private static final long serialVersionUID = -9171435840423368693L;
-    private final transient KafkaConsumer<String, OrderDTO> consumer;
+    private final transient KafkaConsumer<String, String> consumer;
     private volatile transient boolean cancel;
+
+    private final static Logger log = LoggerFactory.getLogger(MyKafkaSource.class);
 
     public MyKafkaSource(Collection<String> topics) throws IOException {
 
@@ -47,17 +54,21 @@ public class MyKafkaSource implements SourceFunction<OrderDTO> {
 
     public void run(SourceContext<OrderDTO> context) throws Exception {
 
+
         while (!cancel && consumer != null) {
-            ConsumerRecords<String, OrderDTO> data = consumer.poll(100);
-            for (ConsumerRecord<String, OrderDTO> item : data) {
-                OrderDTO value = item.value();
-                if (value != null) {
-                    context.collect(value);
+            ConsumerRecords<String, String> data = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            for (ConsumerRecord<String, String> item : data) {
+                try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(item.value().getBytes(StandardCharsets.UTF_8)))) {
+                    OrderDTO orderDTO = (OrderDTO) ois.readObject();
+                    context.collect(orderDTO);
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
                 }
             }
         }
 
     }
+
 
     public void cancel() {
         cancel = true;

@@ -2,6 +2,7 @@ import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.ExtendedSerializer;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -27,7 +28,8 @@ public class Test {
         Properties properties = new Properties();
         properties.load(resourceAsStream);
 
-        KafkaProducer<String, OrderDTO> producer = new KafkaProducer<>(properties, new StringSerializer(), (s, orderDTO) -> orderDTO.toString().getBytes(StandardCharsets.UTF_8));
+        // KafkaProducer<String, OrderDTO> producer = new KafkaProducer<>(properties, new StringSerializer(), (s, orderDTO) -> orderDTO.toString().getBytes(StandardCharsets.UTF_8));
+        KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(properties, new ByteArraySerializer(),new ByteArraySerializer());
 
         while (true) {
             OrderDTO orderDTO = new OrderDTO();
@@ -36,7 +38,7 @@ public class Test {
             orderDTO.key = "123";
             orderDTO.orderNum = UUID.randomUUID().toString();
 
-            ProducerRecord<String, OrderDTO> dto = new ProducerRecord<>("orders", orderDTO.orderNum, orderDTO);
+            ProducerRecord<byte[], byte[]> dto = new ProducerRecord<>("orders_v2", orderDTO.orderNum.getBytes(StandardCharsets.UTF_8), orderDTO.toString().getBytes(StandardCharsets.UTF_8));
 
             producer.send(dto);
 

@@ -15,11 +15,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BinaryOperator;
 
 /**
+ *  如果事件时间乱序到达 会出现混乱
+ */
+
+/**
  * @author: Double>J
  * @email: zjj20001031@foxmail.com
  * @editTime: 5/25/2023 8:24 AM
  * @desc:
  **/
+@Deprecated
 public class MyFixedProcessFunction extends ProcessFunction<OrderDTO, AggDTO> {
 
     private final long timeGap;
